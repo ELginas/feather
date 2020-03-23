@@ -20,6 +20,7 @@ pub mod world;
 mod biomes;
 mod bytes_ext;
 pub mod chunk;
+pub mod commands;
 mod entitymeta;
 pub mod inventory;
 mod math_types;

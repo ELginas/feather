@@ -22,6 +22,7 @@ mod bytes_ext;
 pub mod chunk;
 mod entitymeta;
 pub mod inventory;
+pub mod loot_table;
 mod math_types;
 pub mod network;
 mod save;

@@ -151,6 +151,7 @@ mod tests {
                 biomes: vec![10],
                 entities: vec![],
                 heightmaps: vec![],
+                tile_ticks: vec![],
             },
         };
 

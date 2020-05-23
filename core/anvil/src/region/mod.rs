@@ -59,6 +59,21 @@ pub struct ChunkLevel {
     entities: Vec<EntityData>,
     #[serde(rename = "Heightmaps")]
     heightmaps: Vec<i64>,
+    #[serde(rename = "TileTicks")]
+    tile_ticks: Vec<TileTick>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TileTick {
+    #[serde(rename = "i")]
+    block_id: String,
+    #[serde(rename = "t")]
+    ticks: i64,
+    #[serde(rename = "p")]
+    priority: i32,
+    x: i32,
+    y: i32,
+    z: i32,
 }
 
 /// Represents a chunk section in a region file.
@@ -357,12 +372,12 @@ fn chunk_to_chunk_root(chunk: &Chunk, entities: Vec<EntityData>) -> ChunkRoot {
         .heightmaps()
         .iter()
         .map(|map| {
-            (map.motion_blocking() as i64)
-                + ((map.motion_blocking_no_leaves() as i64) << HEIGHTMAP_OFFSET)
-                + ((map.ocean_floor() as i64) << (HEIGHTMAP_OFFSET * 2))
-                + ((map.ocean_floor_wg() as i64) << (HEIGHTMAP_OFFSET * 3))
-                + ((map.world_surface() as i64) << (HEIGHTMAP_OFFSET * 4))
-                + ((map.world_surface_wg() as i64) << (HEIGHTMAP_OFFSET * 5))
+            (map.motion_blocking as i64)
+                + ((map.motion_blocking_no_leaves as i64) << HEIGHTMAP_OFFSET)
+                + ((map.ocean_floor as i64) << (HEIGHTMAP_OFFSET * 2))
+                + ((map.ocean_floor_wg as i64) << (HEIGHTMAP_OFFSET * 3))
+                + ((map.world_surface as i64) << (HEIGHTMAP_OFFSET * 4))
+                + ((map.world_surface_wg as i64) << (HEIGHTMAP_OFFSET * 5))
         })
         .collect();
     ChunkRoot {
@@ -392,6 +407,7 @@ fn chunk_to_chunk_root(chunk: &Chunk, entities: Vec<EntityData>) -> ChunkRoot {
                 .collect(),
             entities,
             heightmaps,
+            tile_ticks: vec![]
         },
         data_version: DATA_VERSION,
     }

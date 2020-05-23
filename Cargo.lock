@@ -956,6 +956,7 @@ dependencies = [
  "feather-server-packet-buffer",
  "feather-server-physics",
  "feather-server-player",
+ "feather-server-tile-ticks",
  "feather-server-types",
  "feather-server-util",
  "feather-server-weather",
@@ -1145,6 +1146,15 @@ dependencies = [
  "feather-core",
  "feather-server-types",
  "feather-server-util",
+ "fecs",
+]
+
+[[package]]
+name = "feather-server-tile-ticks"
+version = "0.6.0"
+dependencies = [
+ "feather-core",
+ "feather-server-types",
  "fecs",
 ]
 

@@ -2,8 +2,10 @@ use ahash::AHashMap;
 use bitflags::bitflags;
 use feather_biomes::Biome;
 use feather_blocks::BlockId;
-use feather_util::ChunkPosition;
+use feather_util::{BlockPosition, ChunkPosition};
 use smallvec::SmallVec;
+use std::collections::BinaryHeap;
+use std::cmp;
 
 /// The number of bits used for each block
 /// in the global palette.
@@ -64,64 +66,37 @@ pub struct Chunk {
     modified: bool,
 
     heightmaps: Box<[HeightMap]>,
+
+    tile_ticks: BinaryHeap<TileTick>,
+}
+
+#[derive(Clone, PartialEq, Eq, Ord)]
+pub struct TileTick {
+    block: BlockId,
+    position: BlockPosition,
+    priority: i32,
+}
+
+impl cmp::PartialOrd<TileTick> for TileTick {
+    fn partial_cmp(&self, other: &TileTick) -> Option<cmp::Ordering> {
+        self.priority.partial_cmp(&other.priority)
+    }
 }
 
 #[derive(Clone, Copy, Default)]
 pub struct HeightMap {
-    motion_blocking: u8,
-    motion_blocking_no_leaves: u8,
-    ocean_floor: u8,
-    ocean_floor_wg: u8,
-    world_surface: u8,
-    world_surface_wg: u8,
-}
-
-impl HeightMap {
     /// The highest block that is solid or contains a fluid.
-    pub fn motion_blocking(self) -> u8 {
-        self.motion_blocking
-    }
-
-    pub fn set_motion_blocking(&mut self, motion_blocking: u8) {
-        self.motion_blocking = motion_blocking;
-    }
-
+    pub motion_blocking: u8,
     /// The highest block that is solid or contains a fluid and is not leaves.
-    pub fn motion_blocking_no_leaves(self) -> u8 {
-        self.motion_blocking_no_leaves
-    }
-
-    pub fn set_motion_blocking_no_leaves(&mut self, motion_blocking_no_leaves: u8) {
-        self.motion_blocking_no_leaves = motion_blocking_no_leaves;
-    }
-
+    pub motion_blocking_no_leaves: u8,
     /// The highest block that is solid.
-    pub fn ocean_floor(self) -> u8 {
-        self.ocean_floor
-    }
-
-    pub fn set_ocean_floor(&mut self, ocean_floor: u8) {
-        self.ocean_floor = ocean_floor;
-    }
-
+    pub ocean_floor: u8,
     /// The highest block that is solid for world generation.
-    pub fn ocean_floor_wg(self) -> u8 {
-        self.ocean_floor_wg
-    }
-
+    pub ocean_floor_wg: u8,
     /// The highest block that is not air.
-    pub fn world_surface(self) -> u8 {
-        self.world_surface
-    }
-
-    pub fn set_world_surface(&mut self, world_surface: u8) {
-        self.world_surface = world_surface;
-    }
-
+    pub world_surface: u8,
     /// The highest block is not air for world generation.
-    pub fn world_surface_wg(self) -> u8 {
-        self.world_surface_wg
-    }
+    pub world_surface_wg: u8,
 }
 
 bitflags! {
@@ -152,6 +127,7 @@ impl Default for Chunk {
             sections,
             biomes: [Biome::Plains; SECTION_WIDTH * SECTION_WIDTH],
             heightmaps: vec![HeightMap::default(); CHUNK_WIDTH * CHUNK_WIDTH].into_boxed_slice(),
+            tile_ticks: BinaryHeap::new(),
         }
     }
 }
@@ -247,26 +223,26 @@ impl Chunk {
     fn update_heightmap(&mut self, x: usize, y: usize, z: usize, block: BlockId) -> HeightMapMask {
         let heightmap = self.heightmap_mut(x, z);
         let mut mask: HeightMapMask = HeightMapMask::empty();
-        if (block.is_solid() || block.is_fluid()) && heightmap.motion_blocking() < y as u8 {
-            heightmap.set_motion_blocking(y as u8);
+        if (block.is_solid() || block.is_fluid()) && heightmap.motion_blocking < y as u8 {
+            heightmap.motion_blocking = y as u8;
             mask |= HeightMapMask::MOTION_BLOCKING;
         }
 
         if (block.is_solid() || block.is_fluid())
             && !block.is_leaves()
-            && heightmap.motion_blocking_no_leaves() < y as u8
+            && heightmap.motion_blocking_no_leaves < y as u8
         {
-            heightmap.set_motion_blocking_no_leaves(y as u8);
+            heightmap.motion_blocking_no_leaves = y as u8;
             mask |= HeightMapMask::MOTION_BLOCKING_NO_LEAVES;
         }
 
-        if block.is_solid() && heightmap.ocean_floor() < y as u8 {
-            heightmap.set_ocean_floor(y as u8);
+        if block.is_solid() && heightmap.ocean_floor < y as u8 {
+            heightmap.ocean_floor = y as u8;
             mask |= HeightMapMask::OCEAN_FLOOR;
         }
 
-        if !block.is_air() && heightmap.world_surface() < y as u8 {
-            heightmap.set_world_surface(y as u8);
+        if !block.is_air() && heightmap.world_surface < y as u8 {
+            heightmap.world_surface = y as u8;
             mask |= HeightMapMask::WORLD_SURFACE;
         }
         mask

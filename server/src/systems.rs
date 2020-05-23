@@ -9,11 +9,13 @@ use feather_server_player as player;
 use feather_server_types as game;
 use feather_server_util as util;
 use feather_server_weather as weather;
+use feather_server_tile_ticks as tile_ticks;
 
 pub fn build_executor() -> Executor {
     Executor::new()
         .with(player::poll_player_disconnect)
         .with(player::poll_new_clients)
+        .with(tile_ticks::tick)
         .with(physics::entity_physics)
         .with(player::handle_movement_packets)
         .with(player::handle_creative_inventory_action)

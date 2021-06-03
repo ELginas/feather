@@ -30,6 +30,7 @@ members = [
     # Feather (common and server)
     "feather/utils",
     "feather/generated",
+    "feather/inventory",
     "feather/blocks",
     "feather/blocks/generator",
     "feather/base",

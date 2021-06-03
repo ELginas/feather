@@ -869,6 +869,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "feather-inventory"
+version = "0.1.0"
+
+[[package]]
 name = "feather-plugin-host"
 version = "0.1.0"
 dependencies = [
